@@ -2,16 +2,28 @@ name: Bandit
 
 on:
   workflow_dispatch:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    permissions:
-      # required for all workflows
-      security-events: write
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
+
     steps:
+      - uses: actions/checkout@v4
+
       - name: Perform Bandit Analysis
         uses: PyCQA/bandit-action@v1
+        with:
+          format: sarif
+          output: bandit.sarif
+          targets: "."
+
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit.sarif
